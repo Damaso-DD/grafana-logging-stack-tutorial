@@ -185,7 +185,7 @@ kubectl get pods -n demoapp
 
 Ensure the Nginx pod is `Running`.
 
-## Verify Log Flow in Grafana**
+## Verify Log Flow in Grafana
 
 1. Go back to your Grafana instance (`http://<EXTERNAL-IP>`).
 2. Navigate to **Explore** or **Drilldown**.
