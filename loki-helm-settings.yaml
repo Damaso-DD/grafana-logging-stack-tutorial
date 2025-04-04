@@ -1,0 +1,67 @@
+# loki-helm-settings.yaml
+loki:
+  auth_enabled: false # <<< It's a best practice to enable it in production environments
+  storage:
+    type: s3
+    bucketNames:
+      chunks: loki-tutorial # <<< SET YOUR BUCKET NAME HERE (e.g., "loki-tutorial")
+      ruler: loki-tutorial # <<< SET YOUR BUCKET NAME HERE (e.g., "loki-tutorial")
+      admin: loki-tutorial # <<< SET YOUR BUCKET NAME HERE (e.g., "loki-tutorial")
+  storage_config:
+    aws:
+      region: us-east-1 # <<< SET YOUR AWS BUCKET REGION HERE (e.g., "us-east-1")
+    tsdb_shipper:
+      active_index_directory: /var/loki/tsdb-index
+  # Schema config using TSDB
+  schemaConfig:
+    configs:
+    - from: 2025-01-01 # <<< Use a start date relevant to your use case
+      store: tsdb
+      object_store: aws
+      schema: v13 # <<< Use the latest version available
+      index:
+        prefix: index_
+        period: 24h
+  # IMPORTANT: Define appropriate parallelism and ingestion rates values for your use case, default values won't work
+  limits_config:
+    max_query_parallelism: 16
+    ingestion_rate_mb: 16 # <<< Start with a high value and fine-tune from there
+    ingestion_burst_size_mb: 32 # <<< Start with a high value and fine-tune from there
+    retention_period: 168h # 7 days retention (Loki attempts deletion if compactor runs)
+  # IMPORTANT: Compactor retention explicitly DISABLED for stability during the tutorial
+  compactor:
+    retention_enabled: false # Set to true if you want Loki to manage S3 deletion based on retention_period
+    compaction_interval: 2h
+    working_directory: /var/loki/compactor # Ensure this path is writable if persistence enabled
+  ### --- Per-Component Env Vars + Args for AWS Credentials ---
+  backend:
+    extraArgs: [ "-config.expand-env=true" ]
+    extraEnv:
+    - { name: AWS_REGION, value: "us-east-1" } # <<< SET YOUR AWS BUCKET REGION HERE (e.g., "us-east-1")
+    - { name: AWS_ACCESS_KEY_ID, valueFrom: { secretKeyRef: { name: aws-credentials, key: AWS_ACCESS_KEY_ID } } }
+    - { name: AWS_SECRET_ACCESS_KEY, valueFrom: { secretKeyRef: { name: aws-credentials, key: AWS_SECRET_ACCESS_KEY } } }
+  read:
+    extraArgs: [ "-config.expand-env=true" ]
+    extraEnv:
+    - { name: AWS_REGION, value: "us-east-1" } # <<< SET YOUR AWS BUCKET REGION HERE (e.g., "us-east-1")
+    - { name: AWS_ACCESS_KEY_ID, valueFrom: { secretKeyRef: { name: aws-credentials, key: AWS_ACCESS_KEY_ID } } }
+    - { name: AWS_SECRET_ACCESS_KEY, valueFrom: { secretKeyRef: { name: aws-credentials, key: AWS_SECRET_ACCESS_KEY } } }
+  write:
+    extraArgs: [ "-config.expand-env=true" ]
+    extraEnv:
+    - { name: AWS_REGION, value: "us-east-1" } # <<< SET YOUR AWS BUCKET REGION HERE (e.g., "us-east-1")
+    - { name: AWS_ACCESS_KEY_ID, valueFrom: { secretKeyRef: { name: aws-credentials, key: AWS_ACCESS_KEY_ID } } }
+    - { name: AWS_SECRET_ACCESS_KEY, valueFrom: { secretKeyRef: { name: aws-credentials, key: AWS_SECRET_ACCESS_KEY } } }
+# Keep chunksCache disabled for simplicity/stability initially
+chunksCache:
+  enabled: false
+
+# IMPORTANT: Set Resource Requests/Limits AFTER evaluating your use case requirements
+# For Loki, start with HIGH request/limits values and fine-tune from there
+#resources:
+#  requests:
+#    cpu: 500m
+#    memory: 1024Mi
+#  limits:
+#    cpu: 1000m
+#    memory: 2Gi

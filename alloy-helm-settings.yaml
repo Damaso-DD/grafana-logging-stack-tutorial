@@ -1,0 +1,25 @@
+# alloy-helm-settings.yaml
+# Helm values using the Alloy ConfigMap
+serviceAccount:
+  create: true
+  name: alloy
+rbac:
+  create: true
+alloy:
+  mounts:
+    # Mount /var/log to access pod logs
+    varlog: true
+  configMap:
+    # Use the ConfigMap created before
+    create: false
+    name: alloy-settings # <<< Point to the ConfigMap
+    key: config.alloy
+
+# IMPORTANT: Set Resource Requests/Limits AFTER evaluating your use case requirements
+#resources:
+#  requests:
+#    cpu: 200m
+#    memory: 512Mi
+#  limits:
+#    cpu: 400m
+#    memory: 1Gi

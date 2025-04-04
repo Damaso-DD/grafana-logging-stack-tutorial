@@ -1,0 +1,32 @@
+# grafana-helm-settings.yaml
+adminPassword: "YourSecurePassword!" # <<< SET YOUR STRONG PASSWORD HERE
+persistence:
+  enabled: true
+  type: pvc
+  size: 5Gi # <<< Adjust size as needed (e.g., 5Gi, 10Gi) 
+  accessModes: [ ReadWriteOnce ]
+# Configure Service Type for external access via LoadBalancer for simplicity
+service:
+  type: LoadBalancer
+# Configure Loki Datasource
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Loki
+      type: loki
+      url: http://loki-gateway.logging.svc.cluster.local/ # URL points to the loki-gateway service in the logging namespace
+      access: proxy # Use Grafana backend as proxy
+      isDefault: true # Make this the default datasource
+# OPTIONAL: Set resource Requests/Limits (adjust as needed)
+deploymentStrategy:
+  type: Recreate
+
+# IMPORTANT: Set Resource Requests/Limits AFTER evaluating your use case requirements
+#resources:
+#  requests:
+#    cpu: 200m
+#    memory: 512Mi
+#  limits:
+#    cpu: 400m
+#    memory: 1Gi
